@@ -7,6 +7,8 @@
 pLocalPareto(x, alpha, t = NULL)
 }
 \arguments{
+\item{x}{Numeric vector. The CDF is evaluated at \code{x}.}
+
 \item{alpha}{Function. \code{alpha(x)} is the local Pareto alpha at \code{x}.}
 
 \item{t}{Numeric. Threshold of the local Pareto distribution \code{alpha(x)} is used for \code{x>t}. If NULL then \code{alpha}

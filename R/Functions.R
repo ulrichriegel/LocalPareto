@@ -80,12 +80,12 @@ LALocPareto_Layer_Mean_s <- function(Cover, AttachmentPoint, t, alpha_0, gamma, 
     res <- ifelse(x > t, (t/x)^(alpha_0 + 0.5 * alpha_0 * gamma * log(x/t)), 1)
     return(res)
   }
-  EP <- integrate(SF, lower = AttachmentPoint, upper = AttachmentPoint + Cover)$value
+  EP <- stats::integrate(SF, lower = AttachmentPoint, upper = AttachmentPoint + Cover)$value
 
   temp <- max(AttachmentPoint, t)
   for (i in 1:20) {
     if (temp * 10^i < Cover) {
-      EP_temp <- integrate(SF, lower = AttachmentPoint, upper = AttachmentPoint + temp * 10^i)$value
+      EP_temp <- stats::integrate(SF, lower = AttachmentPoint, upper = AttachmentPoint + temp * 10^i)$value
       EP <- max(EP, EP_temp)
     }
   }
@@ -175,12 +175,12 @@ LALocPareto_Layer_SM_s <- function(Cover, AttachmentPoint, t, alpha_0, gamma, de
     res <- 2 * (x - AttachmentPoint) * ifelse(x > t, 1 - (t/x)^(alpha_0 + 0.5 * alpha_0 * gamma * log(x/t)), 0)
     return(res)
   }
-  Int <- integrate(Integrand, lower = AttachmentPoint, upper = AttachmentPoint + Cover)$value
+  Int <- stats::integrate(Integrand, lower = AttachmentPoint, upper = AttachmentPoint + Cover)$value
 
   temp <- max(AttachmentPoint, t)
   for (i in 1:20) {
     if (temp * 10^i < Cover) {
-      Int_temp <- integrate(Integrand, lower = AttachmentPoint, upper = AttachmentPoint + temp * 10^i)$value
+      Int_temp <- stats::integrate(Integrand, lower = AttachmentPoint, upper = AttachmentPoint + temp * 10^i)$value
       Int <- max(Int, Int_temp)
     }
   }
@@ -317,7 +317,8 @@ rLALocPareto <- function(n, t, alpha_0, gamma = NULL, delta = NULL) {
 #'
 #' @param losses Numeric vector. Losses that are used for the ML estimation.
 #' @param t Numeric. Threshold of the Pareto distribution.
-#' @param gamma Numeric vector or NULL. If NULL then the parameter \code{gamma} is estimated.
+#' @param gamma Numeric vector or NULL. If \code{gamma} and \code{delta} are NULL then the parameter \code{gamma} is estimated.
+#' @param delta Numeric vector or NULL. If \code{gamma} and \code{delta} are NULL then the parameter \code{delta} is estimated.
 #' @param weights Numeric vector or NULL. Weights for the losses. For instance \code{weights[i] = 2} and \code{weights[j] = 1} for \code{j != i} has the same effect as adding another loss of size \code{loss[i]}.
 #'
 #' @return Maximum likelihood estimator for the parameters \code{alpha_0} and \code{gamma} of a log-affine local Pareto distribution with threshold \code{t} given the observations \code{losses}
@@ -742,207 +743,6 @@ rPanjer <- function(n, mean, dispersion) {
 }
 
 
-#' Approximate local Pareto distribution by a piecewise Pareto distribution (old version)
-#'
-#' @description  Calculates the parameters of an approximating piecewise Pareto distribution (old version)
-#'
-#' @param alpha Function.
-#' @param t Numeric. Threshold of the distribution. If \code{t = 0} then \code{t} is derived from \code{alpha}.
-#'
-#' @return List with parameters and infos.
-#'
-#' @examples
-#' alpha_0 <- 1.5
-#' t <- 1000
-#' gamma <- 0.5
-#' alpha <- function(x) alpha_0 + alpha_0 * gamma * log(x/t)
-#' LocalPareto_2_PiecewisePareto_OLD(t, alpha)
-#'
-#' @export
-
-
-LocalPareto_2_PiecewisePareto_OLD <- function(alpha, t = NULL) {
-
-  # check if alpha is a vectorized function
-  res <- NULL
-  try(res <- alpha(c(0,1)), silent = T)
-  if (!is.numeric(res)) {
-    alpha_s <- alpha
-    alpha <- Vectorize(alpha_s)
-    res <- NULL
-    try(res <- alpha(c(0,1)), silent = T)
-    if (!is.numeric(res)) {
-      return("alpha is not a vectorized function")
-    }
-  }
-  if (is.positive.finite.number(t)) {
-    x_test <- t * 1.9^(0:20)
-  } else {
-    x_test <- 1.9^((-20):20)
-  }
-  if (min(alpha(x_test)) < 0) {
-    return("alpha is not non-negative")
-  }
-
-  if (is.null(t)) {
-    t <- find_t(alpha)
-  } else{
-    if (!is.nonnegative.finite.number(t)) {
-      return("t must be a non-negative number")
-    }
-  }
-
-  tol_alpha <- 0.01
-  min_step <- 1.01
-  max_step <- 1.1
-  target_prob <- 0.95
-  stop_SF <- 1e-6
-  min_tail_alpha <- 1.01
-
-  t_PP <- numeric(2000)
-  alpha_PP <- numeric(2000)
-  SF <- numeric(2000)
-  xi <- numeric(2000)
-  zeta <- numeric(2000)
-  rel_error_lb <- numeric(2000)
-  rel_error_ub <- numeric(2000)
-
-  nalpha <- function(x) {-alpha(x)}
-  alpha_by_x <- function(x) {alpha(x)/x}
-
-  if (t == 0) {
-    min_i <- -33
-    max_i <- 3
-    for (i in min_i:max_i) {
-      res <- NULL
-      try(res <- integrate(alpha_by_x, lower = 0, upper = 2^i), silent = T)
-      if (!is.numeric(res$value)) {
-        return("alpha not admissible")
-      }
-      if (res$value > -log(0.99)) {
-        break
-      }
-    }
-    t_1 <- 2^(i-1)
-    SF_t_1 <- exp(- integrate(alpha_by_x, lower = 0, upper = t_1)$value)
-    rate <- -log(SF_t_1) / t_1
-
-    t_0 <- t_1 / 1000
-    n <- 30
-    t_PP[1:(n+1)] <- exp(log(1/1000) / n * n:0) * t_1
-    SF[1] <- exp(- integrate(alpha_by_x, lower = 0, upper = t_PP[1])$value)
-    for (i in 2:(n+1)) {
-      SF[i] <- exp(- integrate(alpha_by_x, lower = t_PP[i-1], upper = t_PP[i])$value) * SF[i-1]
-    }
-    alpha_PP[1] <- log(1 / SF[2]) / log(t_PP[2] / t_PP[1])
-    for (i in 2:n) {
-      alpha_PP[i] <- log(SF[i] / SF[i+1]) / log(t_PP[i+1] / t_PP[i])
-    }
-  } else {
-    n <- 0
-    t_PP[1] <- t
-    SF[1] <- 1
-  }
-
-
-
-
-  for (i in (n+1):1999) {
-    max_step_temp <- max_step
-    max_alpha <- - stats::optim(t_PP[i], nalpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * max_step_temp)$value
-    min_alpha <- stats::optim(t_PP[i], alpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * max_step_temp)$value
-    while (max_step_temp > min_step & max_alpha - min_alpha > tol_alpha) {
-      max_step_temp <- max(min_step,  1 + (max_step_temp - 1) / 2)
-      max_alpha <- - stats::optim(t_PP[i], nalpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * max_step_temp)$value
-      min_alpha <- stats::optim(t_PP[i], alpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * max_step_temp)$value
-    }
-    if (max_alpha == min_alpha) {
-      t_PP[i+1] <- t_PP[i] * max_step_temp
-      alpha_PP[i] <- max_alpha
-      SF[i+1] <- SF[i] * max_step_temp^(-max_alpha)
-
-      xi[i] <- (t_PP[i] + t_PP[i+1]) / 2
-      zeta[i] <- (t_PP[i] + t_PP[i+1]) / 2
-      rel_error_lb[i] <- 0
-      rel_error_ub[i] <- 0
-    } else {   # then max_alpha > 0
-      step <- min(target_prob ^ (- 1 / max_alpha), max_step_temp)
-      t_PP[i+1] <- t_PP[i] * step
-      factor_SF <- NULL
-      try(factor_SF <- exp(-integrate(alpha_by_x, lower = t_PP[i], upper = t_PP[i+1])$value), silent = T)
-      if (is.null(factor_SF)) {
-        alpha_PP[i] <- alpha_PP[i-1]
-        SF[i+1] <- SF[i] * (t_PP[i] / t_PP[i+1])^alpha_PP[i]
-        warning("stop criterium not reached!")
-        break
-      }
-      SF[i+1] <- SF[i] * factor_SF
-      alpha_PP[i] <- log(SF[i+1] / SF[i]) / log(t_PP[i] / t_PP[i+1])
-
-      xi[i] <- t_PP[i] ^ ((alpha_PP[i] - max_alpha) / (min_alpha - max_alpha)) * t_PP[i+1] ^ ((min_alpha - alpha_PP[i]) / (min_alpha - max_alpha))
-      zeta[i] <- t_PP[i] ^ ((alpha_PP[i] - min_alpha) / (max_alpha - min_alpha)) * t_PP[i+1] ^ ((max_alpha - alpha_PP[i]) / (max_alpha - min_alpha))
-      rel_error_lb[i] <- (t_PP[i] / zeta[i]) ^ (alpha_PP[i] - min_alpha) - 1
-      rel_error_ub[i] <- (xi[i] / t_PP[i]) ^ (max_alpha - alpha_PP[i]) - 1
-    }
-
-    # if ((i %% 100) == 0) {
-    #   if (exp(1000 / i * log(SF[i+1])) > stop_SF) {
-    #     min_step <- 1 + (min_step - 1) * 2
-    #     max_step <- min_step * 2
-    #   }
-    # }
-
-    if (SF[i+1] < stop_SF) {
-      break
-    }
-  }
-  t_PP <- t_PP[1:(i+1)]
-  alpha_PP <- alpha_PP[1:(i+1)]
-  SF <- SF[1:(i+1)]
-  rel_error_lb <- rel_error_lb[1:i]
-  rel_error_ub <- rel_error_ub[1:i]
-
-  alpha_PP[i+1] <- max(min_tail_alpha, alpha_PP[i])
-  index <- alpha_PP != c(-1, alpha_PP[1:i])
-  t_PP <- t_PP[index]
-  alpha_PP <- alpha_PP[index]
-  SF <- SF[index]
-  res <- list(t = t_PP, alpha = alpha_PP, SF = SF, original_steps=i+1, min_step = min_step, rel_error_lb = rel_error_lb, rel_error_ub = rel_error_ub)
-  return(res)
-
-
-}
-
-find_t <- function(alpha) {
-  nalpha <- function(x) {-alpha(x)}
-  min_i <- -10
-  max_i <- 20
-  for (i in min_i:max_i) {
-    res <- optim(10^i / 2, nalpha, lower = 0, upper = 10^i, method = "Brent")
-    if (res$value < 0) {
-      break
-    }
-  }
-  if (i == min_i) {
-    t <- 0
-  } else if (i == max_i & res$value < 0) {
-    t <- Inf
-  } else {
-    ub <- 10^i
-    lb <- 10^(i-1)
-    while (ub/lb > 1.000001) {
-      res <- optim((lb + ub) / 2, nalpha, lower = lb, upper = (lb + ub) / 2, method = "Brent")
-      if (res$value < 0) {
-        ub <- (ub + lb) / 2
-      } else {
-        lb <- (ub + lb) / 2
-      }
-    }
-    t <- lb
-  }
-  return(t)
-}
-
 
 
 
@@ -987,6 +787,7 @@ rLocalPareto <- function(n, alpha, t = NULL) {
 #'
 #' @description Calculates the CDF of a local Pareto Distribution
 #'
+#' @param x Numeric vector. The CDF is evaluated at \code{x}.
 #' @param alpha Function. \code{alpha(x)} is the local Pareto alpha at \code{x}.
 #' @param t Numeric. Threshold of the local Pareto distribution \code{alpha(x)} is used for \code{x>t}. If NULL then \code{alpha}
 #'          is used on \code{[0,infty)}
@@ -1020,6 +821,7 @@ pLocalPareto <- function(x, alpha, t = NULL) {
 #'
 #' @description Calculates the PDF of a local Pareto Distribution
 #'
+#' @param x Numeric vector. The PDF is evaluated at \code{x}.
 #' @param alpha Function. \code{alpha(x)} is the local Pareto alpha at \code{x}.
 #' @param t Numeric. Threshold of the local Pareto distribution \code{alpha(x)} is used for \code{x>t}. If NULL then \code{alpha}
 #'          is used on \code{[0,infty)}
@@ -1333,7 +1135,7 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
     max_i <- 3
     for (i in min_i:max_i) {
       res <- NULL
-      try(res <- integrate(alpha_by_x, lower = 0, upper = 2^i), silent = T)
+      try(res <- stats::integrate(alpha_by_x, lower = 0, upper = 2^i), silent = T)
       if (!is.numeric(res$value)) {
         return("alpha not admissible")
       }
@@ -1342,15 +1144,15 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
       }
     }
     t_1 <- 2^(i-1)
-    SF_t_1 <- exp(- integrate(alpha_by_x, lower = 0, upper = t_1)$value)
+    SF_t_1 <- exp(- stats::integrate(alpha_by_x, lower = 0, upper = t_1)$value)
     rate <- -log(SF_t_1) / t_1
 
     t_0 <- t_1 / 1000
     n <- 30
     t_PP[1:(n+1)] <- exp(log(1/1000) / n * n:0) * t_1
-    SF[1] <- exp(- integrate(alpha_by_x, lower = 0, upper = t_PP[1])$value)
+    SF[1] <- exp(- stats::integrate(alpha_by_x, lower = 0, upper = t_PP[1])$value)
     for (i in 2:(n+1)) {
-      SF[i] <- exp(- integrate(alpha_by_x, lower = t_PP[i-1], upper = t_PP[i])$value) * SF[i-1]
+      SF[i] <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i-1], upper = t_PP[i])$value) * SF[i-1]
     }
     alpha_PP[1] <- log(1 / SF[2]) / log(t_PP[2] / t_PP[1])
     for (i in 2:n) {
@@ -1388,7 +1190,7 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
       #step <- min(target_prob ^ (- 1 / max_alpha), max_step_temp)
       t_PP[i+1] <- t_PP[i] * phi
       factor_SF <- NULL
-      try(factor_SF <- exp(-integrate(alpha_by_x, lower = t_PP[i], upper = t_PP[i+1])$value), silent = T)
+      try(factor_SF <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i], upper = t_PP[i+1])$value), silent = T)
       if (is.null(factor_SF)) {
         alpha_PP[i] <- alpha_PP[i-1]
         SF[i+1] <- SF[i] * (t_PP[i] / t_PP[i+1])^alpha_PP[i]
@@ -1417,7 +1219,7 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
   ##################
 
   factor_SF <- NULL
-  try(factor_SF <- exp(-integrate(alpha_by_x, lower = t_PP[i+1], upper = t_PP[i+1] * phi_max)$value), silent = T)
+  try(factor_SF <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i+1], upper = t_PP[i+1] * phi_max)$value), silent = T)
   if (is.null(factor_SF)) {
     alpha_PP[i+1] <- max(min_tail_alpha, alpha_PP[i])
   } else {
@@ -1436,4 +1238,40 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
 
 
 }
+
+
+
+
+find_t <- function(alpha) {
+  nalpha <- function(x) {-alpha(x)}
+  min_i <- -10
+  max_i <- 20
+  for (i in min_i:max_i) {
+    res <- stats::optim(10^i / 2, nalpha, lower = 0, upper = 10^i, method = "Brent")
+    if (res$value < 0) {
+      break
+    }
+  }
+  if (i == min_i) {
+    t <- 0
+  } else if (i == max_i & res$value < 0) {
+    t <- Inf
+  } else {
+    ub <- 10^i
+    lb <- 10^(i-1)
+    while (ub/lb > 1.000001) {
+      res <- stats::optim((lb + ub) / 2, nalpha, lower = lb, upper = (lb + ub) / 2, method = "Brent")
+      if (res$value < 0) {
+        ub <- (ub + lb) / 2
+      } else {
+        lb <- (ub + lb) / 2
+      }
+    }
+    t <- lb
+  }
+  return(t)
+}
+
+
+
 

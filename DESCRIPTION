@@ -3,9 +3,15 @@ Title: The local Pareto distribution
 Version: 0.0.0.9000
 Authors@R: 
     person("Ulrich", "Riegel", , "ulrich.riegel@gmx.de", role = c("aut", "cre"))
-Description: Functions and tools for the local Pareto distribution
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: The package provides functions and tools for the 
+    local Pareto distribution.
+License: GPL (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+VignetteBuilder: knitr
+Depends: R (>= 2.10)
+Suggests: 
+    testthat, knitr, rmarkdown
+URL: https://https://github.com/ulrichriegel/LocalPareto
+Language: en-US

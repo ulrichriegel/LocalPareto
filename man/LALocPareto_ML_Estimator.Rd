@@ -11,7 +11,9 @@ LALocPareto_ML_Estimator(losses, t, gamma = NULL, delta = NULL, weights = NULL)
 
 \item{t}{Numeric. Threshold of the Pareto distribution.}
 
-\item{gamma}{Numeric vector or NULL. If NULL then the parameter \code{gamma} is estimated.}
+\item{gamma}{Numeric vector or NULL. If \code{gamma} and \code{delta} are NULL then the parameter \code{gamma} is estimated.}
+
+\item{delta}{Numeric vector or NULL. If \code{gamma} and \code{delta} are NULL then the parameter \code{delta} is estimated.}
 
 \item{weights}{Numeric vector or NULL. Weights for the losses. For instance \code{weights[i] = 2} and \code{weights[j] = 1} for \code{j != i} has the same effect as adding another loss of size \code{loss[i]}.}
 }
