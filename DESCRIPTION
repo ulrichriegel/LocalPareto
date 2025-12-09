@@ -12,5 +12,5 @@ RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Depends: R (>= 2.10)
 Suggests: 
-    testthat, knitr, rmarkdown
+    testthat, knitr, rmarkdown, Pareto
 Language: en-US

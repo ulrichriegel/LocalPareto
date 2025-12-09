@@ -39,7 +39,7 @@ dPP <- function(x, Parameters_PP) {
   Dens <- rep(NaN, length(x))
 
   for (i in 1:k) {
-    index1 <- x <= t_PP[i]
+    index1 <- x < t_PP[i]
     diff_index <- index1 & !index2
     if (i == 1) {
       Dens[diff_index] <- 0
@@ -52,6 +52,39 @@ dPP <- function(x, Parameters_PP) {
 
   return(Dens)
 }
+
+
+
+qPP <- function(y, Parameters_PP) {
+  t_PP <- Parameters_PP$t
+  alpha_PP <- Parameters_PP$alpha
+  excess_prob <- Parameters_PP$SF
+
+  k <- length(t_PP)
+  CDF_at_t <- 1 - excess_prob # pPP(t_PP, Parameters_PP)
+
+  index1 <- rep(F, length(y))
+  index2 <- index1
+  Amount <- rep(NaN, length(y))
+
+  for (i in 1:k) {
+    index1 <- y <= CDF_at_t[i]
+    diff_index <- index1 & !index2
+    if (i == 1) {
+      Amount[diff_index] <- t_PP[1]
+    } else {
+      Amount[diff_index] <- t_PP[i-1] / ((1 - y[diff_index]) / (1 - CDF_at_t[i-1]))^(1 / alpha_PP[i-1])
+    }
+    index2 <- index1
+  }
+  Amount[!index1] <- t_PP[k] / ((1 - y[!index1]) / (1 - CDF_at_t[k]))^(1 / alpha_PP[k])
+
+  return(Amount)
+}
+
+
+
+
 
 
 PP_Layer_Mean <- function(Cover, AttachmentPoint, Parameters_PP) {

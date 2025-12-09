@@ -852,6 +852,40 @@ dLocalPareto <- function(x, alpha, t = NULL) {
 
 
 
+#' Quantile function of the local Pareto Distribution
+#'
+#' @description Calculates the quantile function of a local Pareto Distribution
+#'
+#' @param p Numeric. The function evaluates the quantile function at \code{p}.
+#' @param alpha Function. \code{alpha(x)} is the local Pareto alpha at \code{x}.
+#' @param t Numeric. Threshold of the local Pareto distribution \code{alpha(x)} is used for \code{x>t}. If NULL then \code{alpha}
+#'          is used on \code{[0,infty)}
+#'
+#' @return The quantile function of the local Pareto distribution with threshold \code{t} and parameter function \code{alpha} evaluated at \code{p}.
+#'
+#' @examples
+#' t <- 1000
+#' alpha <- function(x) {2-1000/x}
+#' p <- 0:10 * 0.1
+#' qLocalPareto(p, alpha, t)
+#'
+#' @export
+
+qLocalPareto <- function(p, alpha, t = NULL) {
+  if (is.null(p) || (is.atomic(p) && length(p) == 0)) {
+    return(numeric())
+  }
+
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  if (is.character(Parameters_PP)) {
+    stop(Parameters_PP)
+  }
+
+  return(qPP(p, Parameters_PP))
+
+}
+
+
 
 
 
