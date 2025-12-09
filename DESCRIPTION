@@ -13,5 +13,4 @@ VignetteBuilder: knitr
 Depends: R (>= 2.10)
 Suggests: 
     testthat, knitr, rmarkdown
-URL: https://https://github.com/ulrichriegel/LocalPareto
 Language: en-US
