@@ -175,7 +175,3 @@ valid.parameters.LALocPareto <- function(t, alpha_0, gamma, delta) {
 }
 
 
-
-
-
-
