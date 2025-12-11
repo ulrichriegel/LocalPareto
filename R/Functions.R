@@ -803,8 +803,8 @@ rLocalPareto <- function(n, alpha, t = NULL) {
 #' @export
 
 pLocalPareto <- function(x, alpha, t = NULL) {
-  if (is.null(x) || (is.atomic(x) && length(x) == 0)) {
-    return(numeric())
+  if (!is.vector(x)) {
+    return(NA)
   }
 
   Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
@@ -837,8 +837,8 @@ pLocalPareto <- function(x, alpha, t = NULL) {
 #' @export
 
 dLocalPareto <- function(x, alpha, t = NULL) {
-  if (is.null(x) || (is.atomic(x) && length(x) == 0)) {
-    return(numeric())
+  if (!is.vector(x)) {
+    return(NA)
   }
 
   Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
@@ -872,8 +872,8 @@ dLocalPareto <- function(x, alpha, t = NULL) {
 #' @export
 
 qLocalPareto <- function(p, alpha, t = NULL) {
-  if (is.null(p) || (is.atomic(p) && length(p) == 0)) {
-    return(numeric())
+  if (!is.vector(p)) {
+    return(NA)
   }
 
   Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
