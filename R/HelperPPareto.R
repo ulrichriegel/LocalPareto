@@ -84,9 +84,6 @@ qPP <- function(y, Parameters_PP) {
 
 
 
-
-
-
 PP_Layer_Mean <- function(Cover, AttachmentPoint, Parameters_PP) {
   VecFun <- Vectorize(PP_Layer_Mean_s, c("Cover", "AttachmentPoint"))
   return(VecFun(Cover, AttachmentPoint, Parameters_PP))
