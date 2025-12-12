@@ -175,3 +175,63 @@ valid.parameters.LALocPareto <- function(t, alpha_0, gamma, delta) {
 }
 
 
+
+valid.parameters.PiecewisePareto <- function(Parameters_PP, comment = FALSE) {
+
+  t <- NULL
+  alpha <- NULL
+  SF <- NULL
+
+  try(t <- Parameters_PP$t, silent = T)
+  try(alpha <- Parameters_PP$alpha, silent = T)
+  try(SF <- Parameters_PP$SF, silent = T)
+
+  if (!is.positive.finite.vector(t) || !is.nonnegative.finite.vector(alpha) || !is.positive.finite.vector(SF)) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("t and SF must be a positive vectors, alpha must be a non-negative vector.")
+    }
+  }
+  k <- length(t)
+  if (length(alpha) != k || length(SF) != k) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("t, alpha, and SF must have the same length.")
+    }
+  }
+  if (k > 1 && min(diff(t))<=0) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("t must be increasing.")
+    }
+  }
+  if (k > 1 && max(diff(SF))>0) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("SF must be decreasing.")
+    }
+  }
+  if (max(SF) > 1) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("SF must be in the interval (0,1].")
+    }
+  }
+  if (alpha[k] <= 0) {
+    if (!comment) {
+      return(FALSE)
+    } else {
+      return("Last alpha must be positive.")
+    }
+  }
+  if (!comment) {
+    return(TRUE)
+  } else {
+    return("OK")
+  }
+}
