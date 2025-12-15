@@ -15,21 +15,25 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-The (European) Pareto distribution is probably the most popular distribution for modeling large losses in reinsurance pricing. There are good reasons for this popularity, which are discussed in detail in Fackler (2013). We recommend  Philbrick (1985)  and Schmutz *et.al.* (1998) for an impression of how the (European) Pareto distribution is applied in practice. 
+The (European) Pareto distribution is probably the most popular distribution for modeling large losses in reinsurance pricing. There are good reasons for this popularity, which are discussed in detail in Fackler (2025). We recommend  Philbrick (1985)  and Schmutz *et.al.* (1998) for an impression of how the (European) Pareto distribution is applied in practice. 
+
+This package provides functionality (like CDF, PDF, Layer Mean, Layer Variance, simulation, etc.) for the local Pareto distribution as introduced by Riegel (2025) and for the special case of the log-affine local Pareto distribution.
 
 
 
 ## References
 
-Fackler, M. (2013) Reinventing Pareto: Fits for both small and large losses. ASTIN Colloquium Den Haag
+Fackler, M. (2025) Reinventing Pareto: Fits for both small and large losses. British Actuarial Journal, 30:e33.
 
 Johnson, N.L., and Kotz, S. (1970) Continuous Univariate Distributions-I. Houghton Mifflin Co
 
 Philbrick, S.W. (1985) A Practical Guide to the Single Parameter Pareto Distribution. PCAS LXXII: 44--84
 
-Riegel, U. (2008) Generalizations of common ILF models. Bl\"{a}tter der DGVFM 29: 45--71
+Riegel, U. (2008) Generalizations of common ILF models. Blätter der DGVFM 29: 45--71
 
 Riegel, U. (2018) Matching tower information with piecewise Pareto. European Actuarial Journal 8(2): 437--460
+
+Riegel, U. (2025) The local Pareto distribution. Preprint.
 
 Schmutz, M., and Doerr, R.R. (1998) Das Pareto-Modell in der Sach-Rueckversicherung. Formeln und Anwendungen. Swiss Re Publications, Zuerich
 

@@ -1069,7 +1069,7 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
     }
   }
 
-  epsilon <- rel.tolerance #min(rel.tolerance, abs.tolerance)
+  epsilon <- rel.tolerance
   phi_max <- 2
   min_tail_alpha <- 1.01
 
@@ -1094,17 +1094,17 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
       if (!is.numeric(res$value)) {
         return("alpha not admissible")
       }
-      if (res$value > -log(0.99)) {
+      if (res$value > -log(1 - rel.tolerance)) {
         break
       }
     }
     t_1 <- 2^(i-1)
     SF_t_1 <- exp(- stats::integrate(alpha_by_x, lower = 0, upper = t_1)$value)
-    rate <- -log(SF_t_1) / t_1
+    #rate <- -log(SF_t_1) / t_1
 
-    t_0 <- t_1 / 1000
-    n <- 30
-    t_PP[1:(n+1)] <- exp(log(1/1000) / n * n:0) * t_1
+    t_0 <- t_1 / 100
+    n <- 10
+    t_PP[1:(n+1)] <- exp(log(1/100) / n * n:0) * t_1
     SF[1] <- exp(- stats::integrate(alpha_by_x, lower = 0, upper = t_PP[1])$value)
     for (i in 2:(n+1)) {
       SF[i] <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i-1], upper = t_PP[i])$value) * SF[i-1]
@@ -1123,7 +1123,6 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
 
   phi <- phi_max
   for (i in (n+1):4999) {
-    #max_step_temp <- max_step
     phi <- min(phi_max, 1 + (phi - 1) * 1.5)
     max_alpha <- - stats::optim(t_PP[i], nalpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * phi)$value
     min_alpha <- stats::optim(t_PP[i], alpha, method = "Brent", lower = t_PP[i], upper = t_PP[i] * phi)$value
@@ -1142,7 +1141,6 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
       rel_error_lb[i] <- 0
       rel_error_ub[i] <- 0
     } else {   # then max_alpha > 0
-      #step <- min(target_prob ^ (- 1 / max_alpha), max_step_temp)
       t_PP[i+1] <- t_PP[i] * phi
       factor_SF <- NULL
       try(factor_SF <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i], upper = t_PP[i+1])$value), silent = T)
@@ -1171,8 +1169,6 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
   rel_error_lb <- rel_error_lb[1:i]
   rel_error_ub <- rel_error_ub[1:i]
 
-  ##################
-
   factor_SF <- NULL
   try(factor_SF <- exp(- stats::integrate(alpha_by_x, lower = t_PP[i+1], upper = t_PP[i+1] * phi_max)$value), silent = T)
   if (is.null(factor_SF)) {
@@ -1180,9 +1176,6 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
   } else {
     alpha_PP[i+1] <- - log(factor_SF) / log(phi_max)
   }
-  ##############
-
-  #alpha_PP[i+1] <- max(min_tail_alpha, alpha_PP[i])
 
   index <- alpha_PP != c(-1, alpha_PP[1:i])
   t_PP <- t_PP[index]
@@ -1193,7 +1186,6 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
 
 
 }
-
 
 
 
@@ -1209,12 +1201,12 @@ find_t <- function(alpha) {
   }
   if (i == min_i) {
     t <- 0
-  } else if (i == max_i & res$value < 0) {
+  } else if (i == max_i & res$value == 0) {
     t <- Inf
   } else {
     ub <- 10^i
     lb <- 10^(i-1)
-    while (ub/lb > 1.000001) {
+    while (ub/lb > 1.0000001) {
       res <- stats::optim((lb + ub) / 2, nalpha, lower = lb, upper = (lb + ub) / 2, method = "Brent")
       if (res$value < 0) {
         ub <- (ub + lb) / 2
@@ -1228,5 +1220,37 @@ find_t <- function(alpha) {
 }
 
 
+# should be faster, but find_t is already very fast ...
+find_t_fast <- function(alpha) {
+  nalpha <- function(x) {-alpha(x)}
+  min_i <- -10
+  max_i <- 20
+  for (i in min_i:max_i) {
+    res <- stats::optim(10^i / 2, nalpha, lower = 0, upper = 10^i, method = "Brent")
+    if (res$value < 0) {
+      break
+    }
+  }
+  if (i == min_i) {
+    t <- 0
+  } else if (i == max_i & res$value == 0) {
+    t <- Inf
+  } else {
+    ub <- 10^i
+    lb <- 10^(i-1)
+    while (ub/lb > 1.0000001) {
+      val <- alpha(seq(lb, ub, length.out = 10000))
+      if (max(val) == 0) {
+        ub <- lb
+      } else {
+        index <- min((1:10000)[val > 0])
+        ub <- lb + (index - 1) * (ub - lb) / 10000
+        lb <- lb + max(0, (index - 2) * (ub - lb) / 10000)
+      }
+    }
+    t <- (lb + ub) / 2
+  }
+  return(t)
+}
 
 
