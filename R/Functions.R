@@ -1044,6 +1044,7 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
   res <- NULL
   try(res <- alpha(c(0,1)), silent = T)
   if (!is.numeric(res)) {
+    warning("The function alpha is not vectorized, which may lead to slow performance!")
     alpha_s <- alpha
     alpha <- Vectorize(alpha_s)
     res <- NULL
