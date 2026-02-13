@@ -8,7 +8,8 @@ LocalPareto_2_PiecewisePareto(
   alpha,
   t = NULL,
   rel.tolerance = 1e-04,
-  stop.EP = 1e-06
+  stop.EP = 1e-09,
+  stop.t = Inf
 )
 }
 \arguments{

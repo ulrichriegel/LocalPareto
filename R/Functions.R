@@ -728,7 +728,7 @@ pLocalPareto <- function(x, alpha, t = NULL) {
     return(NA)
   }
 
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t, stop.t = max(x, na.rm = T))
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -762,7 +762,7 @@ dLocalPareto <- function(x, alpha, t = NULL) {
     return(NA)
   }
 
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t, stop.t = max(x, na.rm = T))
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -843,7 +843,7 @@ LocalPareto_ML_Estimator_alpha_0 <- function(losses, t, beta, weights = NULL) {
     warning("t must be a non-negative number.")
     return(NaN)
   }
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(beta, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(beta, t, stop.t = max(losses, na.rm = T))
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -917,7 +917,7 @@ LocalPareto_Layer_Mean <- function(Cover, AttachmentPoint, alpha, t = NULL) {
     return(NaN)
   }
 
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t, stop.t = Cover + AttachmentPoint)
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -961,7 +961,7 @@ LocalPareto_Layer_Var <- function(Cover, AttachmentPoint, alpha, t = NULL) {
     return(NaN)
   }
 
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t, stop.t = Cover + AttachmentPoint)
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -1004,7 +1004,7 @@ LocalPareto_Layer_SM <- function(Cover, AttachmentPoint, alpha, t = NULL) {
     return(NaN)
   }
 
-  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t)
+  Parameters_PP <- LocalPareto_2_PiecewisePareto(alpha, t, stop.t = Cover + AttachmentPoint)
   if (is.character(Parameters_PP)) {
     stop(Parameters_PP)
   }
@@ -1038,7 +1038,7 @@ LocalPareto_Layer_SM <- function(Cover, AttachmentPoint, alpha, t = NULL) {
 #' @export
 
 
-LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4, stop.EP = 1e-6) {
+LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4, stop.EP = 1e-9, stop.t = Inf) {
 
   # check if alpha is a vectorized function
   res <- NULL
@@ -1163,6 +1163,10 @@ LocalPareto_2_PiecewisePareto <- function(alpha, t = NULL, rel.tolerance = 1e-4,
     if (SF[i+1] < stop.EP) {
       break
     }
+    if (t_PP[i] > stop.t) {
+      break
+    }
+
   }
   t_PP <- t_PP[1:(i+1)]
   alpha_PP <- alpha_PP[1:(i+1)]
