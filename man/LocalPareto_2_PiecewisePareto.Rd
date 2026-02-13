@@ -20,6 +20,8 @@ LocalPareto_2_PiecewisePareto(
 \item{rel.tolerance}{Numeric. Maximum of the relative error of the approximation for the survival function.}
 
 \item{stop.EP}{Numeric. Algorithm stops if the survival function is below \code{stop.EP}.}
+
+\item{stop.t}{Numeric. Algorithm stops if the threshold exceeds \code{stop.t}.}
 }
 \value{
 List with parameters and infos.

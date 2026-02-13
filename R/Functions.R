@@ -1025,6 +1025,7 @@ LocalPareto_Layer_SM <- function(Cover, AttachmentPoint, alpha, t = NULL) {
 #' @param t Numeric. Threshold of the distribution. If \code{t = 0} then \code{t} is derived from \code{alpha}.
 #' @param rel.tolerance Numeric. Maximum of the relative error of the approximation for the survival function.
 #' @param stop.EP Numeric. Algorithm stops if the survival function is below \code{stop.EP}.
+#' @param stop.t Numeric. Algorithm stops if the threshold exceeds \code{stop.t}.
 #'
 #' @return List with parameters and infos.
 #'
