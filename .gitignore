@@ -3,3 +3,4 @@
 .Rbuildignore
 /doc/
 /Meta/
+.Rhistory
